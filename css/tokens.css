@@ -1,0 +1,21 @@
+/* 视觉方向：深蓝顶栏校园工作台 + 校徽绿点缀；移动端对齐现网「校景 Banner + 分类宫格」 */
+:root {
+  --dy-navy: #1a2b44;
+  --dy-navy-deep: #122033;
+  --dy-navy-mid: #243a58;
+  --dy-green: #1f7a3a;
+  --dy-green-soft: #2f9a4c;
+  --dy-red: #a50000;
+  --dy-gold: #d4a017;
+  --dy-bg: #f0f2f5;
+  --dy-card: #ffffff;
+  --dy-text: #1f2a37;
+  --dy-muted: #64748b;
+  --dy-border: #e5e7eb;
+  --dy-primary: #1677ff;
+  --dy-radius: 10px;
+  --dy-radius-lg: 14px;
+  --dy-gap: 12px;
+  --dy-shadow: 0 1px 3px rgba(15, 36, 66, .06), 0 4px 12px rgba(15, 36, 66, .04);
+  --dy-font: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
