@@ -151,26 +151,6 @@
   }
 
   /* ---------- 统一公共数据平台 ---------- */
-  function viewDpOverview(page, ctx) {
-    const modules = pagesOf('dp').filter(p => !p.hidden && p.key !== 'overview');
-    const grouped = P.MENUS.dp.filter(g => g.group !== '概览').map(g => `
-      <div class="pf-mod-group">
-        <h4>${esc(g.group)}</h4>
-        <div class="pf-mod-grid">${modules.filter(m => m.group === g.group).map(m => `
-          <a class="pf-mod" href="${href('dp', m.key)}">${ico(m.icon)}<span><strong>${esc(m.label)}</strong><small>${esc(m.count || '')}</small></span></a>`).join('')}
-        </div>
-      </div>`).join('');
-    return `
-      ${kpis([['教职工', '412'], ['在籍学生', '3,186'], ['班级（行政 / 教学）', '66 / 28'], ['场地房间', '438'], ['临时人员', '57', 'warn']])}
-      <div class="pf-cols-2-1">
-        ${panel('数据模块', grouped)}
-        <div class="pf-stack">
-          ${panel('数据完整度', hbars(P.DP_HEALTH, '%'))}
-          ${panel('最近维护', `<ul class="pf-feed">${P.DP_UPDATES.map(([who, what, when]) => `<li><span class="pf-avatar">${esc(who.slice(0, 1))}</span><div><p><b>${esc(who)}</b> ${esc(what)}</p><time>${esc(when)}</time></div></li>`).join('')}</ul>`)}
-        </div>
-      </div>`;
-  }
-
   function permGroups(mode, level) {
     let n = 0;
     const checked = () => (n++ * 0.37) % 1 < level;
@@ -398,26 +378,6 @@
   }
 
   /* ---------- 开放式平台 ---------- */
-  function viewOpenOverview(page, ctx) {
-    const steps = ['注册应用', '获取 AppKey / AppSecret', '申请接口授权', '换取 access_token', '调用开放接口'];
-    const total = P.APIS.base.length + P.APIS.biz.length;
-    return `${kpis([['已接入应用', String(P.OPEN_APPS.length)], ['开放接口', String(total)], ['今日调用', '18,426'], ['调用成功率', '99.8%', 'ok'], ['待审核应用', '1', 'warn']])}
-      ${panel('第三方接入流程', `<ol class="pf-steps is-flow">${steps.map((s, i) => `<li><b>${i + 1}</b><span>${esc(s)}</span></li>`).join('')}</ol>
-        <pre class="pf-codeblock"><code>POST ${esc(P.API_BASE)}/oauth/token
-Content-Type: application/json
-
-{ "appKey": "ak_8f3c****2e1a", "appSecret": "******", "grantType": "client_credentials" }
-
-→ { "code": 0, "data": { "accessToken": "eyJhbGciOi...", "expiresIn": 7200 } }</code></pre>`)}
-      <div class="pf-cols-1-1">
-        ${panel('接口目录', `<div class="pf-api-dir">
-          <div><h4>基础数据接口 <small>${P.APIS.base.length}</small></h4><div class="pf-chips">${P.APIS.base.map(a => `<a class="pf-chip is-link" href="${href('open', 'api-base', a.key)}">${esc(a.name)}</a>`).join('')}</div></div>
-          <div><h4>业务数据接口 <small>${P.APIS.biz.length}</small></h4><div class="pf-chips">${P.APIS.biz.map(a => `<a class="pf-chip is-link" href="${href('open', 'api-biz', a.key)}">${esc(a.name)}</a>`).join('')}</div></div>
-        </div>`)}
-        ${panel('近 7 日调用量（千次）', bars([['11-07', 15.2], ['11-08', 6.1], ['11-09', 5.4], ['11-10', 17.9], ['11-11', 18.8], ['11-12', 19.3], ['11-13', 18.4]]))}
-      </div>`;
-  }
-
   function viewApiAuth(page, ctx) {
     const apps = P.OPEN_APPS.map((r, i) => ({ key: String(i), name: r[0], meta: `编码 ${r[1]}` }));
     const active = apps.find(a => a.key === ctx.sub) || apps[0];
@@ -477,24 +437,6 @@ Content-Type: application/json
   }
 
   /* ---------- 公共数据中心 ---------- */
-  function viewStdOverview(page, ctx) {
-    const blocks = [
-      ['info', '信息标准', 'database', `${P.STD_INFO.length} 类实体 · ${P.STD_INFO.reduce((n, e) => n + e.fields.length, 0)} 个标准字段`, '学校、时段、场地、教师、年级、班级、学籍、部门、学科、校区、学年、学期、角色'],
-      ['code', '代码编码标准', 'dict', `${P.STD_CODES.length} 套代码表`, '性别、学籍性质、在校状态、场地类型、班级类型等统一编码'],
-      ['spec', '业务输出规范', 'docflow', `${P.STD_SPECS.length} 项业务`, '功能描述 + 用例图 + 数据结构'],
-      ['tech', '技术标准', 'api', '4 项', '接口、数据交换、认证授权、加密脱敏'],
-      ['mgmt', '管理规范', 'audit', '4 项', '数据维护、共享审批、账号权限、运维应急'],
-    ];
-    return `<div class="pf-std-hero">
-        <div><h3>江苏省丹阳高级中学 信息化管理标准体系</h3><p>统一数据在采集、交换、传输过程中的分类与描述，确保信息化管理系统建设、使用、管理、维护规范有序。</p></div>
-        <div class="pf-actions">${actionBtn('*下载标准文档（盖章版）', ctx)}${actionBtn('版本记录', ctx)}</div>
-      </div>
-      <div class="pf-std-grid">${blocks.map(([k, t, i, m, d]) => `<a class="pf-std-card" href="${href('std', k)}">${ico(i)}<h4>${esc(t)}</h4><b>${esc(m)}</b><p>${esc(d)}</p></a>`).join('')}</div>
-      ${panel('标准如何被使用', `<div class="pf-flow">
-        ${[['公共数据中心', '定义标准字段与代码'], ['统一公共数据平台', '按标准维护基础数据'], ['开放式平台', '按标准对外输出接口'], ['统一应用管理', '各应用按标准对接']].map(([t, d], i, arr) => `<div class="pf-flow-node"><strong>${esc(t)}</strong><span>${esc(d)}</span></div>${i < arr.length - 1 ? '<span class="pf-flow-arrow" aria-hidden="true">→</span>' : ''}`).join('')}
-      </div>`)}`;
-  }
-
   function viewStdMaster(page, ctx) {
     const isInfo = page.source === 'info';
     const list = isInfo ? P.STD_INFO : P.STD_CODES;
@@ -529,11 +471,11 @@ Content-Type: application/json
   }
 
   const VIEWS = {
-    table: viewTable, dpOverview: viewDpOverview, permEditor: viewPermEditor, tempStats: viewTempStats,
+    table: viewTable, permEditor: viewPermEditor, tempStats: viewTempStats,
     school: viewSchool, semester: viewSemester, post: viewPost,
     appMarket: viewAppMarket, roleUsers: viewRoleUsers, authMatrix: viewAuthMatrix, loginSecurity: viewLoginSecurity,
-    openOverview: viewOpenOverview, apiAuth: viewApiAuth, apiDocs: viewApiDocs,
-    stdOverview: viewStdOverview, stdMaster: viewStdMaster, stdSpec: viewStdSpec,
+    apiAuth: viewApiAuth, apiDocs: viewApiDocs,
+    stdMaster: viewStdMaster, stdSpec: viewStdSpec,
   };
 
   /* ---------- 外壳 ---------- */
@@ -595,8 +537,12 @@ Content-Type: application/json
     const ctx = { app: app.key, sub: parts[3] };
     const view = VIEWS[page.view] || viewTable;
     document.title = `${page.label} · ${app.name} · ${DY.SCHOOL.name}`;
+    requestAnimationFrame(() => DY.platformMount && DY.platformMount());
     return shell(app, page, view(page, ctx));
   };
+
+  DY.PLATFORM_VIEWS = VIEWS;
+  DY.PF = { esc, href, ico, panel, pagesOf, actionBtn, kpis };
 
   /* ---------- 交互 ---------- */
   DY.toast = function (msg, tone = '') {
