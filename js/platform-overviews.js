@@ -72,18 +72,13 @@
     });
     const modules = pagesOf('dp').filter(p => !p.hidden && p.key !== 'overview');
     return `
-      <section class="ov-hero is-dp">
-        <div class="ov-hero-text">
-          <span class="ov-eyebrow"><i class="ov-pulse" aria-hidden="true"></i>数据底座 · 实时同步中</span>
-          <h2>全校基础数据，一处维护，处处可用</h2>
-          <p>人员、组织、场地、教务、学籍五大类主数据在此统一维护，通过开放式平台实时分发给 ${P.OPEN_APPS.length} 个业务应用。</p>
-          <div class="ov-live-line">今日已同步 <b data-live-count="12486">12,486</b> 条 · 最近一次 <b data-live-ago>刚刚</b></div>
-        </div>
+      <section class="ov-hero is-dp" aria-label="数据规模">
         <dl class="ov-hero-kpis">
           <div><dt>教职工</dt><dd>${counter(412)}</dd></div>
           <div><dt>在籍学生</dt><dd>${counter(3186)}</dd></div>
           <div><dt>班级</dt><dd>${counter(94)}</dd></div>
           <div><dt>场地房间</dt><dd>${counter(438)}</dd></div>
+          <div><dt><i class="ov-pulse" aria-hidden="true"></i>今日同步</dt><dd><b data-live-count="12486">12,486</b></dd></div>
         </dl>
       </section>
 
@@ -150,31 +145,10 @@
     return `<div class="ov-toc">${chapter('一', '基础数据接口', P.APIS.base, 'api-base')}${chapter('二', '业务数据接口', P.APIS.biz, 'api-biz')}</div>`;
   }
 
-  const CALL_APPS = P.OPEN_APPS.map(r => r[0]);
-  const ALL_APIS = [...P.APIS.base, ...P.APIS.biz];
-  function callRow(t, app, api, ok, ms) {
-    return `<li class="ov-call"><time>${t}</time><span class="ov-call-app">${esc(app)}</span><code>${esc(api)}</code><span class="pf-tag ${ok ? 'is-ok' : 'is-danger'}">${ok ? '200' : '403'}</span><span class="ov-call-ms">${ms} ms</span></li>`;
-  }
-  function randomCall() {
-    const d = new Date();
-    const t = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
-    const ok = Math.random() > 0.08;
-    return callRow(t, CALL_APPS[Math.floor(Math.random() * CALL_APPS.length)], ALL_APIS[Math.floor(Math.random() * ALL_APIS.length)].path, ok, ok ? 20 + Math.floor(Math.random() * 120) : 4 + Math.floor(Math.random() * 6));
-  }
-
   V.openOverview = function () {
-    const total = ALL_APIS.length;
-    const initial = [
-      ['09:41:07', '班牌管理系统', '/timetables/class', 1, 38], ['09:40:52', '成绩分析系统', '/students', 1, 112],
-      ['09:40:11', '一卡通', '/teachers', 1, 64], ['09:39:30', '录播平台', '/rooms', 0, 6], ['09:38:02', '学生画像', '/exams', 1, 95],
-    ];
+    const total = P.APIS.base.length + P.APIS.biz.length;
     return `
-      <section class="ov-hero is-open">
-        <div class="ov-hero-text">
-          <span class="ov-eyebrow">OPEN API · ${esc(P.API_BASE)}</span>
-          <h2>一次注册，标准接入全校数据</h2>
-          <p>第三方应用经审核与接口授权后，凭 access_token 调用 ${total} 个标准接口，所有数据按公共数据中心标准输出。</p>
-        </div>
+      <section class="ov-hero is-open" aria-label="接入规模">
         <dl class="ov-hero-kpis">
           <div><dt>已接入应用</dt><dd>${counter(P.OPEN_APPS.length)}</dd></div>
           <div><dt>开放接口</dt><dd>${counter(total)}</dd></div>
@@ -187,20 +161,7 @@
         <ul class="ov-flow-legend"><li><i class="is-flow"></i>主流程</li><li><i class="is-back"></i>驳回回退</li><li><i class="is-deny"></i>拒绝</li><li><i class="is-packet"></i>数据请求</li></ul>`,
         `<div class="pf-actions"><a class="dy-btn dy-btn-primary pf-btn-link" href="${href('open', 'apps')}">注册应用</a><a class="dy-btn dy-btn-ghost pf-btn-link" href="${href('open', 'auth')}">接口授权</a></div>`)}
 
-      <div class="ov-grid is-open">
-        ${panel('开放接口手册 · 目录', apiToc(), `<a class="pf-op" href="${href('open', 'api-base')}">查看完整文档</a>`)}
-        <div class="pf-stack">
-          ${panel('实时调用', `<ul class="ov-calls" data-live-feed>${initial.map(r => callRow(...r)).join('')}</ul>`, '<span class="ov-badge"><i class="ov-pulse" aria-hidden="true"></i>LIVE</span>')}
-          ${panel('获取 access_token', `<pre class="pf-codeblock"><code>POST ${esc(P.API_BASE)}/oauth/token
-{ "appKey": "ak_8f3c****2e1a",
-  "appSecret": "******",
-  "grantType": "client_credentials" }
-
-→ { "code": 0, "data": {
-    "accessToken": "eyJhbGciOi...",
-    "expiresIn": 7200 } }</code></pre>`)}
-        </div>
-      </div>`;
+      ${panel('开放接口手册 · 目录', apiToc(), `<a class="pf-op" href="${href('open', 'api-base')}">查看完整文档</a>`)}`;
   };
 
   /* ================= 公共数据中心 ================= */
@@ -228,104 +189,36 @@
     </div>`;
   }
 
-  function spread() {
-    let pageNo = 1;
-    const chapters = [
-      ['第一章', '信息标准', P.STD_INFO.map(e => e.name), 'info'],
-      ['第二章', '代码编码标准', P.STD_CODES.slice(0, 5).map(e => e.name.replace(/（.*）/, '')), 'code'],
-      ['第三章', '业务输出规范', P.STD_SPECS.slice(0, 4).map(e => e.name), 'spec'],
-      ['第四章', '技术标准', [], 'tech'],
-      ['第五章', '管理规范', [], 'mgmt'],
-    ];
-    const toc = chapters.map(([no, title, items, key], ci) => {
-      const start = pageNo;
-      const rows = items.map((it, i) => {
-        const p = pageNo + 1 + i * 2;
-        return `<li class="ov-tl-sub"><span>${ci + 1}.${i + 1}　${esc(it)}</span><i aria-hidden="true"></i><em>${p}</em></li>`;
-      }).join('');
-      pageNo += 2 + items.length * 2 + (items.length ? 0 : 4);
-      const more = key === 'code' || key === 'spec' ? `<li class="ov-tl-sub is-more"><span>……</span><i aria-hidden="true"></i><em></em></li>` : '';
-      return `<li class="ov-tl-ch"><a href="${href('std', key)}"><span>${no}　${esc(title)}</span><i aria-hidden="true"></i><em>${start}</em></a></li>${key === 'info' ? rows.split('</li>').slice(0, 6).join('</li>') + '</li><li class="ov-tl-sub is-more"><span>……</span><i aria-hidden="true"></i><em></em></li>' : rows + more}`;
-    }).join('');
-    const school = P.STD_INFO[0];
-    return `<div class="ov-spread">
-      <article class="ov-page is-left" aria-label="标准目录">
-        <header class="ov-run">江苏省丹阳高级中学信息化管理标准</header>
-        <h3 class="ov-page-title">目　录</h3>
-        <ol class="ov-tl">${toc}</ol>
-        <footer class="ov-folio">— Ⅰ —</footer>
-      </article>
-      <article class="ov-page is-right" aria-label="第一章 信息标准 节选">
-        <header class="ov-run is-right">第一章　信息标准</header>
-        <h3 class="ov-page-title is-left">第一章　信息标准</h3>
-        <p class="ov-para"><b>1.0.1</b>　为统一学校各信息系统间数据的分类与描述，保证数据在采集、交换、传输过程中科学、规范，制定本标准。</p>
-        <p class="ov-para"><b>1.0.2</b>　本标准适用于全校 ${P.STD_INFO.length} 类基础信息，各业务应用接入时应严格遵守。</p>
-        <h4 class="ov-sec">1.1　学校信息</h4>
-        <table class="ov-book-table"><caption>表 1.1　学校信息字段</caption>
-          <thead><tr><th>字段名称</th><th>代码</th><th>类型</th><th>必填</th></tr></thead>
-          <tbody>${school.fields.slice(0, 5).map(f => `<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td><td>${esc(f[2])}</td><td>${esc(f[4])}</td></tr>`).join('')}</tbody>
-        </table>
-        <span class="ov-stamp" aria-hidden="true"><i>★</i>丹阳高级中学<b>标准专用章</b></span>
-        <footer class="ov-folio">— 1 —</footer>
-      </article>
-    </div>`;
-  }
-
   function dataFlow() {
     const sources = ['教务系统', '学籍系统', '人事系统', '一卡通', '后勤系统', '德育评价'];
     const outs = ['班牌', '成绩分析', '学生画像', '一卡通', '移动校园'];
-    const sy = i => 40 + i * 52;
-    const oy = i => 62 + i * 54;
-    const hubY = i => 88 + i * 37;
-    const inPaths = sources.map((_, i) => `M178 ${sy(i)} C228 ${sy(i)} 220 ${hubY(i)} 270 ${hubY(i)}`);
-    const outPaths = outs.map((_, i) => `M780 180 C820 180 806 ${oy(i)} 846 ${oy(i)}`);
-    const box = (x, y, w, h, t, cls = '') => `<g class="ov-dnode ${cls}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/><text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle">${esc(t)}</text></g>`;
-    const particles = (paths, prefix, cls, dur) => paths.map((d, i) => `<path id="${prefix}${i}" d="${d}" class="ov-dpath ${cls}"/>${[0, dur / 2].map(off => `<circle r="3.5" class="ov-particle ${cls}"><animateMotion dur="${dur}s" begin="-${(i * 0.37 + off).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${prefix}${i}"/></animateMotion></circle>`).join('')}`).join('');
-    return `<svg viewBox="0 0 1000 340" class="ov-dflow" role="img" aria-label="数据流动示意：业务系统数据经公共数据中心标准校验后进入统一公共数据平台，再经开放式平台分发给各应用">
-      <text x="103" y="16" text-anchor="middle" class="ov-dcol">数据来源</text>
-      <text x="370" y="16" text-anchor="middle" class="ov-dcol">公共数据中心</text>
-      <text x="560" y="16" text-anchor="middle" class="ov-dcol">主数据</text>
-      <text x="725" y="16" text-anchor="middle" class="ov-dcol">分发</text>
-      <text x="912" y="16" text-anchor="middle" class="ov-dcol">数据应用</text>
-      ${particles(inPaths, 'ovin', 'is-in', 2.6)}
-      <path id="ovmid1" d="M470 180 H500" class="ov-dpath is-mid"/><path id="ovmid2" d="M620 180 H670" class="ov-dpath is-mid"/>
-      ${['ovmid1', 'ovmid2'].map((id, i) => [0, 0.6].map(o => `<circle r="3.5" class="ov-particle is-mid"><animateMotion dur="1.2s" begin="-${i * 0.3 + o}s" repeatCount="indefinite"><mpath href="#${id}"/></animateMotion></circle>`).join('')).join('')}
-      ${particles(outPaths, 'ovout', 'is-out', 2.2)}
-      ${sources.map((s, i) => box(28, sy(i) - 17, 150, 34, s, 'is-src')).join('')}
-      <g class="ov-hub">
-        <rect x="270" y="50" width="200" height="260" rx="12"/>
-        <text x="370" y="76" text-anchor="middle" class="ov-hub-t">标准化处理</text>
-        ${[['采集汇聚', '统一字段口径'], ['标准校验', '必填 · 类型 · 长度'], ['编码映射', '代码表统一转换'], ['质量评估', '完整度 · 一致性']].map(([t, s], i) => `<g class="ov-stage" style="--d:${i * 0.5}s"><rect x="288" y="${92 + i * 52}" width="164" height="42" rx="6"/><text x="370" y="${110 + i * 52}" text-anchor="middle" class="ov-stage-t">${t}</text><text x="370" y="${126 + i * 52}" text-anchor="middle" class="ov-stage-s">${s}</text></g>`).join('')}
+    const sy = i => 46 + i * 54;
+    const oy = i => 66 + i * 56;
+    const hubY = i => 92 + i * 37;
+    const inPaths = sources.map((_, i) => `M190 ${sy(i)} C240 ${sy(i)} 232 ${hubY(i)} 282 ${hubY(i)}`);
+    const outPaths = outs.map((_, i) => `M790 186 C830 186 816 ${oy(i)} 852 ${oy(i)}`);
+    const block = (x, y, w, h, t, tone) => `<g class="ov-tblock is-${tone}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/><rect x="${x}" y="${y}" width="4" height="${h}" rx="2" class="ov-tbar"/><text x="${x + w / 2 + 2}" y="${y + h / 2 + 5}" text-anchor="middle">${esc(t)}</text></g>`;
+    const stream = (paths, prefix, tone, dur) => paths.map((d, i) => `<path id="${prefix}${i}" d="${d}" class="ov-tpath is-${tone}"/>${[0, dur / 3, dur * 2 / 3].map(off => `<circle r="3" class="ov-tdot is-${tone}" filter="url(#ov-glow)"><animateMotion dur="${dur}s" begin="-${(i * 0.41 + off).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${prefix}${i}"/></animateMotion></circle>`).join('')}`).join('');
+    const link = (id, d, tone) => `<path id="${id}" d="${d}" class="ov-tpath is-${tone} is-thick"/>${[0, 0.4, 0.8].map(o => `<circle r="3.5" class="ov-tdot is-${tone}" filter="url(#ov-glow)"><animateMotion dur="1.2s" begin="-${o}s" repeatCount="indefinite"><mpath href="#${id}"/></animateMotion></circle>`).join('')}`;
+    return `<svg viewBox="0 0 1010 360" class="ov-tflow" role="img" aria-label="数据流动：业务系统数据经公共数据中心标准化处理后进入统一公共数据平台，再经开放式平台分发给各应用">
+      <defs><filter id="ov-glow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      ${stream(inPaths, 'ovin', 'cyan', 2.8)}
+      ${link('ovmid1', 'M482 186 H512', 'green')}${link('ovmid2', 'M632 186 H680', 'blue')}
+      ${stream(outPaths, 'ovout', 'amber', 2.4)}
+      ${sources.map((t, i) => block(30, sy(i) - 18, 160, 36, t, 'cyan')).join('')}
+      <g class="ov-thub"><rect x="282" y="52" width="200" height="268" rx="12"/><rect x="290" y="56" width="184" height="2" class="ov-thub-scan"/>
+        ${['采集汇聚', '标准校验', '编码映射', '质量评估'].map((t, i) => `<g class="ov-tstage" style="--d:${i * 0.5}s"><rect x="302" y="${80 + i * 58}" width="160" height="44" rx="6"/><text x="382" y="${107 + i * 58}" text-anchor="middle">${t}</text></g>`).join('')}
       </g>
-      ${box(500, 140, 120, 80, '统一公共数据平台', 'is-master')}
-      ${box(670, 152, 110, 56, '开放式平台', 'is-open')}
-      ${outs.map((s, i) => box(846, oy(i) - 17, 132, 34, s, 'is-out')).join('')}
+      ${block(512, 144, 120, 84, '统一公共数据平台', 'blue')}
+      ${block(680, 158, 110, 56, '开放式平台', 'amber')}
+      ${outs.map((t, i) => block(852, oy(i) - 18, 132, 36, t, 'amber')).join('')}
     </svg>`;
   }
 
-  V.stdOverview = function (page, ctx) {
+  V.stdOverview = function () {
     return `
-      <section class="ov-std-head">
-        <div>
-          <span class="ov-eyebrow is-dark">DZ/BZ 2026 · 第 1 版</span>
-          <h2>江苏省丹阳高级中学信息化管理标准体系</h2>
-          <p>统一数据在采集、交换、传输过程中的分类与描述，保证信息化系统建设、使用、管理、维护规范有序。</p>
-        </div>
-        <div class="pf-actions">${DY.PF.actionBtn('*下载标准文档（盖章版）', ctx)}${DY.PF.actionBtn('版本记录', ctx)}</div>
-      </section>
-
-      ${panel('标准编目', books(), '<span class="ov-note">共 5 册 · 点击书册进入</span>')}
-
-      <div class="ov-grid is-std">
-        ${panel('数据流动', `${dataFlow()}
-          <dl class="ov-dstats">
-            <div><dt>今日交换</dt><dd><b data-live-count="86214">86,214</b> 条</dd></div>
-            <div><dt>标准字段</dt><dd>${counter(fieldCount())} 个</dd></div>
-            <div><dt>代码表</dt><dd>${counter(P.STD_CODES.length)} 套</dd></div>
-            <div><dt>校验通过率</dt><dd>${counter(99.2, '%')}</dd></div>
-          </dl>`, '<span class="ov-badge is-green"><i class="ov-pulse" aria-hidden="true"></i>实时</span>')}
-        ${panel('标准目录', spread(), '<span class="ov-note">节选 · 第一章</span>')}
-      </div>`;
+      <section class="ov-tech" aria-label="数据流动">${dataFlow()}</section>
+      ${panel('标准编目', books(), '<span class="ov-note">共 5 册 · 点击书册进入</span>')}`;
   };
 
   /* ================= 挂载与实时刷新 ================= */
@@ -348,7 +241,6 @@
     });
   };
 
-  let ago = 0;
   setInterval(() => {
     if (document.hidden) return;
     document.querySelectorAll('[data-live-bars] .ov-lb').forEach(lb => {
@@ -360,12 +252,6 @@
       const n = Number(el.dataset.liveCount) + Math.floor(Math.random() * 9);
       el.dataset.liveCount = n;
       el.textContent = fmt(n);
-    });
-    ago = Math.random() > 0.5 ? 0 : ago + 2;
-    document.querySelectorAll('[data-live-ago]').forEach(el => { el.textContent = ago ? `${ago} 秒前` : '刚刚'; });
-    document.querySelectorAll('[data-live-feed]').forEach(list => {
-      list.insertAdjacentHTML('afterbegin', randomCall());
-      while (list.children.length > 6) list.lastElementChild.remove();
     });
   }, 2000);
 })();

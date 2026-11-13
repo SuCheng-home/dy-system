@@ -499,11 +499,11 @@
       <div class="pf-body">
         <aside class="pf-side" aria-label="${esc(app.name)} 菜单"><div class="pf-side-inner">${side}</div></aside>
         <main class="pf-main">
-          <div class="pf-head">
-            <nav class="pf-crumb" aria-label="面包屑"><a href="${href(app.key)}">${esc(app.name)}</a><span>/</span><span>${esc(page.group)}</span><span>/</span><span>${esc(page.label)}</span></nav>
-            <h1>${esc(page.label)}</h1>
-            <p>${esc(page.desc || '')}</p>
-          </div>
+  ${page.key === 'overview' ? `<h1 class="sr-only">${esc(app.name)} · ${esc(page.label)}</h1>` : `<div class="pf-head">
+  <nav class="pf-crumb" aria-label="面包屑"><a href="${href(app.key)}">${esc(app.name)}</a><span>/</span><span>${esc(page.group)}</span><span>/</span><span>${esc(page.label)}</span></nav>
+  <h1>${esc(page.label)}</h1>
+  <p>${esc(page.desc || '')}</p>
+  </div>`}
           <div class="pf-content">${content}</div>
         </main>
       </div>
