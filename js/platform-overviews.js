@@ -72,15 +72,6 @@
     });
     const modules = pagesOf('dp').filter(p => !p.hidden && p.key !== 'overview');
     return `
-      <section class="ov-hero is-dp" aria-label="数据规模">
-        <dl class="ov-hero-kpis">
-          <div><dt>教职工</dt><dd>${counter(412)}</dd></div>
-          <div><dt>在籍学生</dt><dd>${counter(3186)}</dd></div>
-          <div><dt>班级</dt><dd>${counter(94)}</dd></div>
-          <div><dt>场地房间</dt><dd>${counter(438)}</dd></div>
-          <div><dt><i class="ov-pulse" aria-hidden="true"></i>今日同步</dt><dd><b data-live-count="12486">12,486</b></dd></div>
-        </dl>
-      </section>
 
       <div class="ov-grid is-dp">
         ${panel('近 30 天数据维护量', `${areaChart([
@@ -146,16 +137,7 @@
   }
 
   V.openOverview = function () {
-    const total = P.APIS.base.length + P.APIS.biz.length;
     return `
-      <section class="ov-hero is-open" aria-label="接入规模">
-        <dl class="ov-hero-kpis">
-          <div><dt>已接入应用</dt><dd>${counter(P.OPEN_APPS.length)}</dd></div>
-          <div><dt>开放接口</dt><dd>${counter(total)}</dd></div>
-          <div><dt>今日调用</dt><dd><b data-live-count="18426">18,426</b></dd></div>
-          <div><dt>成功率</dt><dd>${counter(99.8, '%')}</dd></div>
-        </dl>
-      </section>
 
       ${panel('第三方应用接入流程', `<div class="ov-flow-wrap">${flowDiagram()}</div>
         <ul class="ov-flow-legend"><li><i class="is-flow"></i>主流程</li><li><i class="is-back"></i>驳回回退</li><li><i class="is-deny"></i>拒绝</li><li><i class="is-packet"></i>数据请求</li></ul>`,
@@ -189,42 +171,59 @@
     </div>`;
   }
 
-  function dataFlow() {
-    const sources = ['教务系统', '学籍系统', '人事系统', '一卡通', '后勤系统', '德育评价'];
-    const outs = ['班牌', '成绩分析', '学生画像', '一卡通', '移动校园'];
-    const sy = i => 46 + i * 54;
-    const oy = i => 66 + i * 56;
-    const hubY = i => 92 + i * 37;
-    const inPaths = sources.map((_, i) => `M190 ${sy(i)} C240 ${sy(i)} 232 ${hubY(i)} 282 ${hubY(i)}`);
-    const outPaths = outs.map((_, i) => `M790 186 C830 186 816 ${oy(i)} 852 ${oy(i)}`);
-    const block = (x, y, w, h, t, tone) => `<g class="ov-tblock is-${tone}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/><rect x="${x}" y="${y}" width="4" height="${h}" rx="2" class="ov-tbar"/><text x="${x + w / 2 + 2}" y="${y + h / 2 + 5}" text-anchor="middle">${esc(t)}</text></g>`;
-    const stream = (paths, prefix, tone, dur) => paths.map((d, i) => `<path id="${prefix}${i}" d="${d}" class="ov-tpath is-${tone}"/>${[0, dur / 3, dur * 2 / 3].map(off => `<circle r="3" class="ov-tdot is-${tone}" filter="url(#ov-glow)"><animateMotion dur="${dur}s" begin="-${(i * 0.41 + off).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${prefix}${i}"/></animateMotion></circle>`).join('')}`).join('');
-    const link = (id, d, tone) => `<path id="${id}" d="${d}" class="ov-tpath is-${tone} is-thick"/>${[0, 0.4, 0.8].map(o => `<circle r="3.5" class="ov-tdot is-${tone}" filter="url(#ov-glow)"><animateMotion dur="1.2s" begin="-${o}s" repeatCount="indefinite"><mpath href="#${id}"/></animateMotion></circle>`).join('')}`;
-    return `<svg viewBox="0 0 1010 360" class="ov-tflow" role="img" aria-label="数据流动：业务系统数据经公共数据中心标准化处理后进入统一公共数据平台，再经开放式平台分发给各应用">
-      <defs><filter id="ov-glow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-      ${stream(inPaths, 'ovin', 'cyan', 2.8)}
-      ${link('ovmid1', 'M482 186 H512', 'green')}${link('ovmid2', 'M632 186 H680', 'blue')}
-      ${stream(outPaths, 'ovout', 'amber', 2.4)}
-      ${sources.map((t, i) => block(30, sy(i) - 18, 160, 36, t, 'cyan')).join('')}
-      <g class="ov-thub"><rect x="282" y="52" width="200" height="268" rx="12"/><rect x="290" y="56" width="184" height="2" class="ov-thub-scan"/>
-        ${['采集汇聚', '标准校验', '编码映射', '质量评估'].map((t, i) => `<g class="ov-tstage" style="--d:${i * 0.5}s"><rect x="302" y="${80 + i * 58}" width="160" height="44" rx="6"/><text x="382" y="${107 + i * 58}" text-anchor="middle">${t}</text></g>`).join('')}
-      </g>
-      ${block(512, 144, 120, 84, '统一公共数据平台', 'blue')}
-      ${block(680, 158, 110, 56, '开放式平台', 'amber')}
-      ${outs.map((t, i) => block(852, oy(i) - 18, 132, 36, t, 'amber')).join('')}
-    </svg>`;
+  function dataCenterScene() {
+    const cyl = (cls, title, lines, extra = '') => `<div class="dc-cyl ${cls}">
+      <span class="dc-tag">${esc(title)}</span>
+      <div class="dc-cyl-body"><ul>${lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>${extra}</div>
+    </div>`;
+    const beams = cls => `<div class="dc-beams ${cls}">${[0, 1, 2].map(i => `<i style="--i:${i}"></i>`).join('')}</div>`;
+    const dots = Array.from({ length: 16 }, (_, i) => `<b style="--x:${(i * 37) % 100}%;--d:${((i * 0.53) % 3).toFixed(2)}s;--s:${2 + (i % 3)}px"></b>`).join('');
+    const blocks = [['database', '数据采集'], ['shield', '标准校验'], ['layers', '数据治理']];
+    const steps = ['字段接入', '代码映射', '必填校验', '类型校验', '长度校验', '去重清洗', '质量评估'];
+    const flow = ['数据接入', '标准校验', '编码转换', '质量检测', '写入主数据'];
+    const bases = ['信息标准', '代码编码标准', '业务输出规范'];
+    return `<div class="dc-fit" data-fit="1100x480"><div class="dc-scene" aria-hidden="true">
+      <div class="dc-floor"></div>
+      ${cyl('is-src', '数据来源', ['教务系统', '学籍系统', '人事系统', '一卡通', '后勤 · 德育'], `<div class="dc-dots">${dots}</div>`)}
+      ${beams('is-left')}
+      <svg class="dc-box" viewBox="0 0 1100 480">
+        <defs><filter id="dc-glow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <linearGradient id="dc-front" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f7bff" stop-opacity=".16"/><stop offset="1" stop-color="#2f7bff" stop-opacity=".04"/></linearGradient></defs>
+        <rect x="334" y="54" width="470" height="330" class="dc-back"/>
+        <polygon points="300,86 334,54 804,54 770,86" class="dc-top"/>
+        <polygon points="770,86 804,54 804,384 770,416" class="dc-side"/>
+        <rect x="300" y="86" width="470" height="330" fill="url(#dc-front)" class="dc-front" filter="url(#dc-glow)"/>
+        ${[[395, 416], [535, 416], [675, 416]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + 22}" class="dc-pillar"/>`).join('')}
+      </svg>
+      <span class="dc-title">公共数据中心</span>
+      <div class="dc-blocks">${blocks.map(([ic, t], i) => `<div class="dc-block" style="--i:${i}">${ico(ic, 'dc-block-ico')}<span>${t}</span></div>`).join('')}</div>
+      <ul class="dc-steps">${steps.map((t, i) => `<li style="--i:${i}">${t}</li>`).join('')}</ul>
+      <div class="dc-chev"><i></i><i></i><i></i><i></i></div>
+      <div class="dc-flow"><span class="dc-cap">开始</span>${flow.map((t, i) => `<span class="dc-bar" style="--i:${i}">${t}</span>`).join('')}<span class="dc-cap">结束</span></div>
+      <div class="dc-bases">${bases.map(t => `<span>${t}</span>`).join('')}</div>
+      ${beams('is-right')}
+      ${cyl('is-out', '数据服务', ['统一公共数据平台', '开放式平台', '班牌 · 画像', '成绩分析'], '<div class="dc-orbs"><i></i><i></i><i></i></div>')}
+    </div></div>`;
   }
 
   V.stdOverview = function () {
     return `
-      <section class="ov-tech" aria-label="数据流动">${dataFlow()}</section>
+      <section class="ov-dc" aria-label="数据流动：业务系统数据经公共数据中心采集、校验、治理后，以标准数据服务提供给统一公共数据平台、开放式平台及各应用">${dataCenterScene()}</section>
       ${panel('标准编目', books(), '<span class="ov-note">共 5 册 · 点击书册进入</span>')}`;
   };
 
   /* ================= 挂载与实时刷新 ================= */
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  const fitObserver = new ResizeObserver(entries => entries.forEach(({ target }) => {
+    const [w, h] = target.dataset.fit.split('x').map(Number);
+    const k = target.clientWidth / w;
+    target.style.setProperty('--k', k);
+    target.style.height = `${h * k}px`;
+  }));
+
   DY.platformMount = function () {
+    document.querySelectorAll('[data-fit]').forEach(el => fitObserver.observe(el));
     document.querySelectorAll('[data-count]').forEach(el => {
       const target = Number(el.dataset.count);
       const suffix = el.dataset.suffix || '';
