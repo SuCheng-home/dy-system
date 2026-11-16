@@ -451,6 +451,13 @@
 
   function render() {
     const parts = routeParts();
+    if (parts[0] === 'p' && DY.renderPlatform) {
+      const platform = DY.renderPlatform(parts);
+      if (platform === '') return;
+      document.getElementById('app').innerHTML = `${demoBarHtml()}${headerHtml('')}${platform}`;
+      window.scrollTo(0, 0);
+      return;
+    }
     const active = primaryKey(parts);
     let main = '';
     if (active === 'home') main = pageHome();
